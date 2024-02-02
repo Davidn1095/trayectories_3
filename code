@@ -1,0 +1,63 @@
+
+# Load necessary library
+library(ggplot2)
+
+# File paths
+file_paths <- list(
+  Cuantil5Condpred = "Cuantil5Condpred.txt",
+  Cuantil5pred = "Cuantil5pred.txt",
+  Cuantil95Condpred = "Cuantil95Condpred.txt",
+  Cuantil95pred = "Cuantil95pred.txt",
+  MedCondpred = "MedCondpred.txt",
+  Medianacondpred = "Medianacondpred.txt",
+  Medianapred = "Medianapred.txt",
+  Medpred = "Medpred.txt",
+  ModaCondpred = "ModaCondpred.txt",
+  Modapred = "Modapred.txt"
+)
+
+# Reading the files and creating plots
+
+for (name in names(file_paths)) {
+  df <- read.table(file_paths[[name]], header = FALSE)
+  colnames(df) <- c("Values")
+  
+  # Base R Plot
+  plot(df$Values, type = "l", main = name, xlab = "Index", ylab = "Values")
+  
+  # Alternatively, using ggplot2
+  # ggplot(df, aes(x = seq_along(Values), y = Values)) +
+  #   geom_line() +
+  #   ggtitle(name) +
+  #   xlab("Index") +
+  #   ylab("Values")
+}
+
+
+# Initialize min and max values
+min_value <- Inf
+max_value <- -Inf
+
+# Initialize plot data frame
+plot_data <- data.frame(Index = numeric(), Value = numeric(), Set = factor())
+
+# Load and process each file
+for (name in names(file_paths)) {
+  df <- read.table(file_paths[[name]], header = FALSE, colClasses = "numeric")
+  df <- na.omit(df)  # Remove NA values
+  min_value <- min(min_value, min(df$V1, na.rm = TRUE))
+  max_value <- max(max_value, max(df$V1, na.rm = TRUE))
+  plot_data <- rbind(plot_data, data.frame(Index = 1:nrow(df), Value = df$V1, Set = factor(name)))
+}
+
+# Ensure the 'Index' column is numeric
+plot_data$Index <- as.numeric(plot_data$Index)
+
+# Plot using ggplot
+ggplot(plot_data, aes(x = Index, y = Value, color = Set)) +
+  geom_line() +
+  scale_x_continuous(limits = c(1, max(plot_data$Index))) +
+  scale_y_continuous(limits = c(min_value, max_value)) +
+  labs(x = "Index", y = "Values", title = "Combined Plot of All Datasets") +
+  theme_minimal() +
+  theme(legend.position = "right")
